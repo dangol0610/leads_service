@@ -51,9 +51,7 @@ class OutboxEvent(Base):
     """Represents an outbox event in the database."""
 
     __tablename__ = "outbox"
-    __table_args__ = Index(
-        name="idx_outbox_unpublished", columns=["published_at", "occurred_at"]
-    )
+    __table_args__ = (Index("idx_outbox_unpublished", "published_at", "occurred_at"),)
 
     event_id: Mapped[UUID] = mapped_column(UUIDType, primary_key=True, default=uuid4)
     event_type: Mapped[str] = mapped_column(String, nullable=False)
