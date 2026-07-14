@@ -1,5 +1,4 @@
 from datetime import datetime
-from enum import Enum
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -9,16 +8,11 @@ from sqlalchemy import Enum as EnumType
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
+from src.domain.lead import LeadStatus
 from src.infrastructure.database.config import Base
 
 
-class LeadStatus(str, Enum):
-    NEW = "new"
-    APPROVED = "approved"
-    REJECTED = "rejected"
-
-
-class Lead(Base):
+class LeadModel(Base):
     """Represents a lead in the database."""
 
     __tablename__ = "leads"
@@ -47,7 +41,7 @@ class Lead(Base):
     )
 
 
-class OutboxEvent(Base):
+class OutboxEventModel(Base):
     """Represents an outbox event in the database."""
 
     __tablename__ = "outbox"
@@ -72,7 +66,7 @@ class OutboxEvent(Base):
     )
 
 
-class InboundEvent(Base):
+class InboundEventModel(Base):
     """Represents an inbound event in the database."""
 
     __tablename__ = "inbound_events"
