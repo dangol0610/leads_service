@@ -1,4 +1,5 @@
 from typing import Protocol
+from uuid import UUID
 
 from src.domain.events import OutboxEvent
 from src.domain.lead import Lead
@@ -6,6 +7,7 @@ from src.domain.lead import Lead
 
 class LeadRepository(Protocol):
     async def add(self, lead: Lead) -> None: ...
+    async def get_by_id(self, lead_id: UUID) -> Lead | None: ...
 
 
 class OutboxRepository(Protocol):

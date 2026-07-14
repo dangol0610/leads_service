@@ -1,4 +1,6 @@
-from sqlalchemy import insert
+from uuid import UUID
+
+from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.events import OutboxEvent
@@ -22,6 +24,24 @@ class SqlAlchemyLeadRepository:
             updated_at=lead.updated_at,
         )
         await self._session.execute(stmt)
+
+    async def get_by_id(self, lead_id: UUID) -> Lead | None:
+        query = select(LeadModel).where(LeadModel.id == lead_id)
+        result = await self._session.execute(query)
+        orm_lead = result.scalar_one_or_none()
+
+        if orm_lead is None:
+            return None
+        return Lead(
+            id=orm_lead.id,
+            name=orm_lead.name,
+            phone=orm_lead.phone,
+            source=orm_lead.source,
+            comment=orm_lead.comment,
+            status=orm_lead.status,
+            created_at=orm_lead.created_at,
+            updated_at=orm_lead.updated_at,
+        )
 
 
 class SqlAlchemyOutboxRepository:

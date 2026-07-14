@@ -16,7 +16,7 @@ class Lead:
     name: str
     phone: str
     source: str
-    comment: str
+    comment: str | None
     status: LeadStatus
     created_at: datetime
     updated_at: datetime
@@ -27,7 +27,7 @@ class Lead:
         name: str,
         phone: str,
         source: str,
-        comment: str,
+        comment: str | None,
     ) -> "Lead":
         now = datetime.now(UTC)
         return cls(

@@ -1,4 +1,5 @@
-from src.app.commands import CreateLeadCommand
+from src.app.commands import CreateLeadCommand, GetLeadQuery
+from src.app.exceptions import LeadNotFoundError
 from src.app.interfaces import UnitOfWork
 from src.domain.events import OutboxEvent
 from src.domain.lead import Lead
@@ -24,5 +25,18 @@ class CreateLeadService:
         except Exception:
             await self._uow.rollback()
             raise
+
+        return lead
+
+
+class GetLeadService:
+    def __init__(self, uow: UnitOfWork) -> None:
+        self._uow = uow
+
+    async def execute(self, query: GetLeadQuery) -> Lead:
+        lead = await self._uow.leads.get_by_id(query.lead_id)
+
+        if lead is None:
+            raise LeadNotFoundError(query.lead_id)
 
         return lead

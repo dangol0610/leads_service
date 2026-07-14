@@ -411,6 +411,7 @@ dependencies = [
     { name = "asyncpg" },
     { name = "fastapi", extra = ["standard"] },
     { name = "loguru" },
+    { name = "phonenumbers" },
     { name = "pydantic-settings" },
     { name = "sqlalchemy" },
     { name = "uvicorn", extra = ["standard"] },
@@ -422,6 +423,7 @@ requires-dist = [
     { name = "asyncpg", specifier = ">=0.31.0" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.139.0" },
     { name = "loguru", specifier = ">=0.7.3" },
+    { name = "phonenumbers", specifier = ">=9.0.34" },
     { name = "pydantic-settings", specifier = ">=2.14.2" },
     { name = "sqlalchemy", specifier = ">=2.0.51" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.51.0" },
@@ -523,6 +525,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d6/54/cfe61301667036ec958cb99bd3efefba235e65cdeb9c84d24a8293ba1d90/mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba", size = 8729, upload-time = "2022-08-14T12:40:10.846Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8", size = 9979, upload-time = "2022-08-14T12:40:09.779Z" },
+]
+
+[[package]]
+name = "phonenumbers"
+version = "9.0.34"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/86/c3/e154829a50679c38ae28ec9c4f151f2c425db5e70fd445266e76f6d6cd65/phonenumbers-9.0.34.tar.gz", hash = "sha256:00751c75d1166485ca80ce02ec15b6a61a2628e9b313381579330bc70c934075", size = 2306776, upload-time = "2026-07-03T06:30:37.358Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/16/0a/3a7980f3b071dde9a297d85cf6b18ba4bc2e5024e1c453b3da8a1dc14268/phonenumbers-9.0.34-py2.py3-none-any.whl", hash = "sha256:1221bf8e65bd2c02770226488af806d4636814bc997104d3a1f7de6ed6410bd2", size = 2595344, upload-time = "2026-07-03T06:30:33.913Z" },
 ]
 
 [[package]]
