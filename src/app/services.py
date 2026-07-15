@@ -11,10 +11,13 @@ from src.domain.lead import Lead
 
 
 class CreateLeadService:
+    """Service for creating a lead and publishing an outbox event."""
+
     def __init__(self, uow: UnitOfWork) -> None:
         self._uow = uow
 
     async def execute(self, command: CreateLeadCommand) -> Lead:
+        """Create a lead and persist it with an outbox event in one transaction."""
         lead = Lead.create(
             name=command.name,
             phone=command.phone,
@@ -37,25 +40,30 @@ class CreateLeadService:
 
 
 class GetLeadService:
+    """Service for retrieving a lead by ID."""
+
     def __init__(self, uow: UnitOfWork) -> None:
         self._uow = uow
 
     async def execute(self, query: GetLeadQuery) -> Lead:
+        """Get a lead by ID or raise LeadNotFoundError."""
         lead = await self._uow.leads.get_by_id(query.lead_id)
-        logger.info("Lead retrieved")
         if lead is None:
             logger.error(f"Lead not found: {query.lead_id}")
             raise LeadNotFoundError(query.lead_id)
-
+        logger.info("Lead retrieved")
         return lead
 
 
 class OutboxPublisherService:
+    """Service for publishing unpublished outbox events to Kafka."""
+
     def __init__(self, uow: UnitOfWork, producer: MessageProducer) -> None:
         self._uow = uow
         self._producer = producer
 
     async def execute(self, topic: str) -> int:
+        """Publish all unpublished outbox events to the given Kafka topic."""
         outbox_events = await self._uow.outbox.get_unpublished()
         if not outbox_events:
             logger.info("No outbox events to publish")
@@ -88,10 +96,13 @@ class OutboxPublisherService:
 
 
 class ModerationConsumerService:
+    """Service for processing moderation events from Kafka."""
+
     def __init__(self, uow: UnitOfWork) -> None:
         self._uow = uow
 
     async def process(self, command: ProcessModerationCommand) -> bool:
+        """Process a moderation event with idempotency check."""
         exists = await self._uow.inbound.exists(command.event_id)
         if exists:
             logger.debug(f"Skipped duplicate event: {command.event_id}")

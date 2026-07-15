@@ -8,6 +8,8 @@ from src.domain.lead import Lead, LeadStatus
 
 
 class CreateLeadRequest(BaseModel):
+    """Request schema for creating a lead."""
+
     name: str = Field(min_length=1, max_length=255)
     phone: PhoneNumber
     source: str = Field(min_length=1, max_length=255)
@@ -17,6 +19,8 @@ class CreateLeadRequest(BaseModel):
 
 
 class LeadResponse(BaseModel):
+    """Response schema for a lead."""
+
     id: UUID
     name: str
     phone: str
@@ -28,6 +32,7 @@ class LeadResponse(BaseModel):
 
     @classmethod
     def from_domain(cls, lead: Lead) -> "LeadResponse":
+        """Convert a domain Lead to a response schema."""
         return cls(
             id=lead.id,
             name=lead.name,

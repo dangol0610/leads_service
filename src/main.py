@@ -21,6 +21,7 @@ database = Database(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Application lifespan: initialize database on start, dispose on shutdown."""
     app.state.database = database
     yield
     await database.close()
@@ -38,6 +39,7 @@ app.include_router(leads_router)
 
 @app.middleware("http")
 async def add_correlation_id(request: Request, call_next: Callable) -> Response:
+    """Add or propagate X-Correlation-ID header for request tracing."""
     correlation_id = request.headers.get("X-Correlation-ID") or str(uuid4())
     request.state.correlation_id = correlation_id
 

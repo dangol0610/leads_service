@@ -8,6 +8,8 @@ from src.domain.lead import Lead
 
 @dataclass(slots=True)
 class OutboxEvent:
+    """An event to be published to Kafka via the outbox pattern."""
+
     event_id: UUID
     event_type: str
     aggregate_id: UUID
@@ -17,6 +19,7 @@ class OutboxEvent:
 
     @classmethod
     def lead_created(cls, lead: Lead) -> "OutboxEvent":
+        """Create a lead_created.v1 outbox event from a lead."""
         return cls(
             event_id=uuid4(),
             event_type="lead_created.v1",
@@ -31,11 +34,14 @@ class OutboxEvent:
         )
 
     def mark_published(self) -> None:
+        """Mark the event as published."""
         self.published_at = datetime.now(tz=UTC)
 
 
 @dataclass(slots=True)
 class InboundEvent:
+    """An event received from Kafka after processing."""
+
     event_id: UUID
     event_type: str
     aggregate_id: UUID

@@ -5,6 +5,7 @@ from src.api.schemas.errors import ErrorDetails, ErrorResponse
 
 
 async def lead_not_found_handler(request: Request, _: Exception) -> JSONResponse:
+    """Handle LeadNotFoundError and return a structured 404 response."""
     correlation_id: str = request.state.correlation_id
 
     body = ErrorResponse(

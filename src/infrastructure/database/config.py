@@ -10,6 +10,11 @@ from sqlalchemy.orm import DeclarativeBase
 
 
 class Database:
+    """Async database engine and session factory.
+
+    Manages the connection pool and provides sessions for the application.
+    """
+
     def __init__(
         self,
         database_url: str,
@@ -33,9 +38,11 @@ class Database:
         )
 
     async def close(self) -> None:
+        """Dispose the database engine and release all connections."""
         await self.engine.dispose()
 
     async def get_session(self) -> AsyncGenerator[AsyncSession]:
+        """Yield an async session that auto-closes on exit."""
         async with self.session_factory() as session:
             yield session
 

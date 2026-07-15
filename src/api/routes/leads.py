@@ -15,6 +15,7 @@ async def create_lead(
     request: CreateLeadRequest,
     service: CreateLeadService = Depends(get_create_lead_service),
 ) -> LeadResponse:
+    """Create a new lead."""
     command = CreateLeadCommand(
         name=request.name,
         phone=str(request.phone),
@@ -30,5 +31,6 @@ async def get_lead(
     lead_id: UUID,
     service: GetLeadService = Depends(get_get_lead_service),
 ) -> LeadResponse:
+    """Get a lead by ID."""
     lead = await service.execute(GetLeadQuery(lead_id=lead_id))
     return LeadResponse.from_domain(lead)

@@ -5,6 +5,8 @@ from uuid import UUID, uuid4
 
 
 class LeadStatus(str, Enum):
+    """Lead status enum."""
+
     NEW = "new"
     APPROVED = "approved"
     REJECTED = "rejected"
@@ -12,6 +14,8 @@ class LeadStatus(str, Enum):
 
 @dataclass(slots=True)
 class Lead:
+    """A customer lead."""
+
     id: UUID
     name: str
     phone: str
@@ -29,6 +33,7 @@ class Lead:
         source: str,
         comment: str | None,
     ) -> "Lead":
+        """Create a new lead with status new."""
         now = datetime.now(UTC)
         return cls(
             id=uuid4(),
@@ -42,5 +47,6 @@ class Lead:
         )
 
     def apply_moderation(self, approved: bool) -> None:
+        """Update lead status based on moderation result."""
         self.status = LeadStatus.APPROVED if approved else LeadStatus.REJECTED
         self.updated_at = datetime.now(tz=UTC)

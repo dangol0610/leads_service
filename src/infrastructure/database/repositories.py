@@ -14,10 +14,13 @@ from src.infrastructure.database.models import (
 
 
 class SqlAlchemyLeadRepository:
+    """SQLAlchemy implementation of LeadRepository."""
+
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
     async def add(self, lead: Lead) -> None:
+        """Insert a new lead."""
         stmt = insert(LeadModel).values(
             id=lead.id,
             name=lead.name,
@@ -31,6 +34,7 @@ class SqlAlchemyLeadRepository:
         await self._session.execute(stmt)
 
     async def get_by_id(self, lead_id: UUID) -> Lead | None:
+        """Get a lead by ID, returning a domain Lead or None."""
         query = select(LeadModel).where(LeadModel.id == lead_id)
         result = await self._session.execute(query)
         orm_lead = result.scalar_one_or_none()
@@ -49,6 +53,7 @@ class SqlAlchemyLeadRepository:
         )
 
     async def update_status(self, lead_id: UUID, status: LeadStatus) -> None:
+        """Update lead status."""
         stmt = (
             update(LeadModel)
             .where(LeadModel.id == lead_id)
@@ -58,10 +63,13 @@ class SqlAlchemyLeadRepository:
 
 
 class SqlAlchemyOutboxRepository:
+    """SQLAlchemy implementation of OutboxRepository."""
+
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
     async def add(self, event: OutboxEvent) -> None:
+        """Insert an outbox event."""
         stmt = insert(OutboxEventModel).values(
             event_id=event.event_id,
             event_type=event.event_type,
@@ -73,6 +81,7 @@ class SqlAlchemyOutboxRepository:
         await self._session.execute(stmt)
 
     async def get_unpublished(self) -> list[OutboxEvent]:
+        """Get unpublished outbox events with row-level locking."""
         query = (
             select(OutboxEventModel)
             .where(OutboxEventModel.published_at.is_(None))
@@ -95,6 +104,7 @@ class SqlAlchemyOutboxRepository:
         ]
 
     async def mark_as_published(self, event_id: UUID) -> None:
+        """Mark an outbox event as published."""
         stmt = (
             update(OutboxEventModel)
             .where(OutboxEventModel.event_id == event_id)
@@ -104,10 +114,13 @@ class SqlAlchemyOutboxRepository:
 
 
 class SqlAlchemyInboundEventRepository:
+    """SQLAlchemy implementation of InboundEventRepository."""
+
     def __init__(self, session: AsyncSession):
         self._session = session
 
     async def add(self, event: InboundEvent) -> None:
+        """Insert an inbound event for idempotency tracking."""
         stmt = insert(InboundEventModel).values(
             event_id=event.event_id,
             event_type=event.event_type,
@@ -118,6 +131,7 @@ class SqlAlchemyInboundEventRepository:
         await self._session.execute(stmt)
 
     async def exists(self, event_id: UUID) -> bool:
+        """Check if an inbound event already exists."""
         stmt = select(InboundEventModel).where(InboundEventModel.event_id == event_id)
         result = await self._session.execute(stmt)
         if result.scalar():

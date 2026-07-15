@@ -12,6 +12,8 @@ from src.infrastructure.kafka.producer import AiokafkaProducer
 
 
 class OutboxPublisherWorker:
+    """Worker that publishes unpublished outbox events to Kafka in a loop."""
+
     def __init__(
         self,
         database: Database,
@@ -26,10 +28,12 @@ class OutboxPublisherWorker:
         self._running = False
 
     async def start(self) -> None:
+        """Start the worker and connect to Kafka."""
         await self._producer.start()
         self._running = True
 
     async def stop(self) -> None:
+        """Stop the worker gracefully."""
         if not self._running:
             return
         self._running = False
@@ -37,6 +41,7 @@ class OutboxPublisherWorker:
         await self._database.close()
 
     async def run(self) -> None:
+        """Run the outbox publishing loop until a shutdown signal is received."""
         await self.start()
 
         loop = asyncio.get_running_loop()
@@ -57,6 +62,7 @@ class OutboxPublisherWorker:
 
 
 def main() -> None:
+    """Entry point for the outbox publisher worker."""
     database = Database(
         database_url=settings.database_url,
         pool_size=settings.DB_POOL_SIZE,

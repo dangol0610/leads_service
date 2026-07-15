@@ -10,6 +10,7 @@ from src.infrastructure.database.uow import SqlAlchemyUnitOfWork
 
 
 async def get_session(request: Request) -> AsyncGenerator[AsyncSession, None]:
+    """Provide an async database session for FastAPI dependency injection."""
     database: Database = request.app.state.database
     async for session in database.get_session():
         yield session
@@ -18,6 +19,7 @@ async def get_session(request: Request) -> AsyncGenerator[AsyncSession, None]:
 async def get_get_lead_service(
     session: AsyncSession = Depends(get_session),
 ) -> GetLeadService:
+    """Provide GetLeadService with a UoW backed by the current session."""
     uow: UnitOfWork = SqlAlchemyUnitOfWork(session)
     return GetLeadService(uow)
 
@@ -25,5 +27,6 @@ async def get_get_lead_service(
 async def get_create_lead_service(
     session: AsyncSession = Depends(get_session),
 ) -> CreateLeadService:
+    """Provide CreateLeadService with a UoW backed by the current session."""
     uow: UnitOfWork = SqlAlchemyUnitOfWork(session)
     return CreateLeadService(uow)

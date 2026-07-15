@@ -6,6 +6,7 @@ from uuid import UUID
 from loguru import logger
 
 from src.app.commands import ProcessModerationCommand
+from src.app.interfaces import MessageConsumer
 from src.app.services import ModerationConsumerService
 from src.core.config import settings
 from src.infrastructure.database.config import Database
@@ -14,10 +15,12 @@ from src.infrastructure.kafka.consumer import AioKafkaConsumer
 
 
 class ModerationConsumerWorker:
+    """Worker that consumes moderation events from Kafka and processes them."""
+
     def __init__(
         self,
         database: Database,
-        consumer: AioKafkaConsumer,
+        consumer: MessageConsumer,
         poll_timeout_ms: int,
     ) -> None:
         self._database = database
@@ -26,10 +29,12 @@ class ModerationConsumerWorker:
         self._running = False
 
     async def start(self) -> None:
+        """Start the worker and subscribe to the Kafka topic."""
         await self._consumer.start()
         self._running = True
 
     async def stop(self) -> None:
+        """Stop the worker gracefully."""
         if not self._running:
             return
         self._running = False
@@ -37,6 +42,7 @@ class ModerationConsumerWorker:
         await self._database.close()
 
     async def run(self) -> None:
+        """Run the moderation consumer loop until a shutdown signal is received."""
         await self.start()
 
         loop = asyncio.get_running_loop()
@@ -87,6 +93,7 @@ class ModerationConsumerWorker:
 
 
 def main() -> None:
+    """Entry point for the moderation consumer worker."""
     database = Database(
         database_url=settings.database_url,
         pool_size=settings.DB_POOL_SIZE,
