@@ -1,0 +1,10 @@
+.venv
+.idea
+.git
+.gitignore
+__pycache__
+*.pyc
+.env
+.uv.lock
+README.md
+Тестовое задание Backend (1).md

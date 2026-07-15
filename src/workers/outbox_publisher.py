@@ -1,5 +1,4 @@
 import asyncio
-import signal
 
 from loguru import logger
 
@@ -44,21 +43,25 @@ class OutboxPublisherWorker:
         """Run the outbox publishing loop until a shutdown signal is received."""
         await self.start()
 
-        loop = asyncio.get_running_loop()
-        for sig in (signal.SIGINT, signal.SIGTERM):
-            loop.add_signal_handler(sig, lambda: asyncio.create_task(self.stop()))
-        while self._running:
-            async for session in self._database.get_session():
-                uow = SqlAlchemyUnitOfWork(session=session)
-                service = OutboxPublisherService(uow=uow, producer=self._producer)
-                count = await service.execute(topic=self._topic)
+        try:
+            while self._running:
+                async for session in self._database.get_session():
+                    uow = SqlAlchemyUnitOfWork(session=session)
+                    service = OutboxPublisherService(uow=uow, producer=self._producer)
+                    count = await service.execute(topic=self._topic)
 
-            if count == 0:
-                logger.debug(f"No events to publish, sleep {self._poll_interval}s")
-                await asyncio.sleep(self._poll_interval)
-            else:
-                logger.info(f"Published {count} events to topic {self._topic}")
-        logger.info("Worker stopped")
+                if count == 0:
+                    logger.debug(f"No events to publish, sleep {self._poll_interval}s")
+                    await asyncio.sleep(self._poll_interval)
+                else:
+                    logger.info(f"Published {count} events to topic {self._topic}")
+        except asyncio.CancelledError:
+            logger.info("Worker cancelled")
+        except Exception:
+            logger.exception("Unexpected worker error")
+        finally:
+            await self.stop()
+            logger.info("Worker stopped")
 
 
 def main() -> None:
@@ -77,7 +80,10 @@ def main() -> None:
         topic=settings.KAFKA_OUTBOX_TOPIC,
         poll_interval=settings.KAFKA_POLL_INTERVAL,
     )
-    asyncio.run(worker.run())
+    try:
+        asyncio.run(worker.run())
+    except KeyboardInterrupt:
+        logger.info("Shutting down publisher")
 
 
 if __name__ == "__main__":

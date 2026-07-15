@@ -66,7 +66,7 @@ class OutboxPublisherService:
         """Publish all unpublished outbox events to the given Kafka topic."""
         outbox_events = await self._uow.outbox.get_unpublished()
         if not outbox_events:
-            logger.info("No outbox events to publish")
+            logger.debug("No outbox events to publish")
             return 0
         try:
             for event in outbox_events:

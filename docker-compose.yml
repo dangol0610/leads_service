@@ -1,0 +1,88 @@
+services:
+    postgres:
+        image: postgres:16-alpine
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_DB: leads_service
+        ports:
+            - "5432:5432"
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U postgres"]
+            interval: 5s
+            timeout: 3s
+            retries: 5
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+
+    redpanda:
+        image: redpandadata/redpanda:v24.3.12
+        command:
+            - redpanda
+            - start
+            - --smp=1
+            - --memory=512M
+            - --reserve-memory=0M
+            - --overprovisioned
+            - --node-id=0
+            - --kafka-addr=INTERNAL://0.0.0.0:29092,EXTERNAL://0.0.0.0:9092
+            - --advertise-kafka-addr=INTERNAL://redpanda:29092,EXTERNAL://localhost:9092
+        ports:
+            - "9092:9092"
+            - "29092:29092"
+        healthcheck:
+            test: ["CMD", "rpk", "cluster", "info"]
+            interval: 10s
+            timeout: 5s
+            retries: 10
+        volumes:
+            - redpanda_data:/var/lib/redpanda/data
+
+    leads-api:
+        build: .
+        command: >
+            sh -c "alembic upgrade head && uvicorn src.main:app --host 0.0.0.0 --port 8000"
+        ports:
+            - "8000:8000"
+        environment:
+            POSTGRES_HOST: postgres
+            POSTGRES_PORT: 5432
+            KAFKA_BOOTSTRAP_SERVERS: redpanda:29092
+            LOGURU_LEVEL: INFO
+        depends_on:
+            postgres:
+                condition: service_healthy
+            redpanda:
+                condition: service_healthy
+
+    leads-publisher:
+        build: .
+        command: python -m src.workers.outbox_publisher
+        environment:
+            POSTGRES_HOST: postgres
+            POSTGRES_PORT: 5432
+            KAFKA_BOOTSTRAP_SERVERS: redpanda:29092
+            LOGURU_LEVEL: INFO
+        depends_on:
+            postgres:
+                condition: service_healthy
+            redpanda:
+                condition: service_healthy
+
+    leads-consumer:
+        build: .
+        command: python -m src.workers.consumer
+        environment:
+            POSTGRES_HOST: postgres
+            POSTGRES_PORT: 5432
+            KAFKA_BOOTSTRAP_SERVERS: redpanda:29092
+            LOGURU_LEVEL: INFO
+        depends_on:
+            postgres:
+                condition: service_healthy
+            redpanda:
+                condition: service_healthy
+
+volumes:
+    postgres_data:
+    redpanda_data:
