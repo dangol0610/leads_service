@@ -16,6 +16,11 @@ class Settings(BaseSettings):
     DB_POOL_RECYCLE: int = Field(default=3600)
     DB_POOL_PRE_PING: bool = Field(default=True)
 
+    # Kafka settings
+    KAFKA_BOOTSTRAP_SERVERS: str = Field(default="kafka:9092")
+    KAFKA_OUTBOX_TOPIC: str = Field(default="leads.events.v1")
+    KAFKA_POLL_INTERVAL: int = Field(default=5)
+
     @property
     def database_url(self) -> str:
         return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"

@@ -1,6 +1,7 @@
+from datetime import UTC, datetime
 from uuid import UUID
 
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.events import OutboxEvent
@@ -56,5 +57,35 @@ class SqlAlchemyOutboxRepository:
             payload=event.payload,
             occurred_at=event.occurred_at,
             published_at=event.published_at,
+        )
+        await self._session.execute(stmt)
+
+    async def get_unpublished(self) -> list[OutboxEvent]:
+        query = (
+            select(OutboxEventModel)
+            .where(OutboxEventModel.published_at.is_(None))
+            .order_by(OutboxEventModel.occurred_at)
+            .limit(100)
+            .with_for_update(skip_locked=True)
+        )
+        result = await self._session.execute(query)
+        orm_events = result.scalars().all()
+        return [
+            OutboxEvent(
+                event_id=orm_event.event_id,
+                event_type=orm_event.event_type,
+                aggregate_id=orm_event.aggregate_id,
+                payload=orm_event.payload,
+                occurred_at=orm_event.occurred_at,
+                published_at=orm_event.published_at,
+            )
+            for orm_event in orm_events
+        ]
+
+    async def mark_as_published(self, event_id: UUID) -> None:
+        stmt = (
+            update(OutboxEventModel)
+            .where(OutboxEventModel.event_id == event_id)
+            .values(published_at=datetime.now(tz=UTC))
         )
         await self._session.execute(stmt)
