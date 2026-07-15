@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     KAFKA_BOOTSTRAP_SERVERS: str = Field(default="kafka:9092")
     KAFKA_OUTBOX_TOPIC: str = Field(default="leads.events.v1")
     KAFKA_POLL_INTERVAL: int = Field(default=5)
+    KAFKA_CONSUMER_TOPIC: str = Field(default="lead_moderation.events.v1")
+    KAFKA_CONSUMER_GROUP_ID: str = Field(default="leads-moderation-consumer")
+    KAFKA_POLL_TIMEOUT_MS: int = Field(default=1000)
 
     @property
     def database_url(self) -> str:

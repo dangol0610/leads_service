@@ -1,12 +1,16 @@
 from datetime import UTC, datetime
 from uuid import UUID
 
-from sqlalchemy import insert, select, update
+from sqlalchemy import func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.domain.events import OutboxEvent
-from src.domain.lead import Lead
-from src.infrastructure.database.models import LeadModel, OutboxEventModel
+from src.domain.events import InboundEvent, OutboxEvent
+from src.domain.lead import Lead, LeadStatus
+from src.infrastructure.database.models import (
+    InboundEventModel,
+    LeadModel,
+    OutboxEventModel,
+)
 
 
 class SqlAlchemyLeadRepository:
@@ -43,6 +47,14 @@ class SqlAlchemyLeadRepository:
             created_at=orm_lead.created_at,
             updated_at=orm_lead.updated_at,
         )
+
+    async def update_status(self, lead_id: UUID, status: LeadStatus) -> None:
+        stmt = (
+            update(LeadModel)
+            .where(LeadModel.id == lead_id)
+            .values(status=status, updated_at=func.now())
+        )
+        await self._session.execute(stmt)
 
 
 class SqlAlchemyOutboxRepository:
@@ -89,3 +101,25 @@ class SqlAlchemyOutboxRepository:
             .values(published_at=datetime.now(tz=UTC))
         )
         await self._session.execute(stmt)
+
+
+class SqlAlchemyInboundEventRepository:
+    def __init__(self, session: AsyncSession):
+        self._session = session
+
+    async def add(self, event: InboundEvent) -> None:
+        stmt = insert(InboundEventModel).values(
+            event_id=event.event_id,
+            event_type=event.event_type,
+            aggregate_id=event.aggregate_id,
+            payload=event.payload,
+            received_at=event.received_at,
+        )
+        await self._session.execute(stmt)
+
+    async def exists(self, event_id: UUID) -> bool:
+        stmt = select(InboundEventModel).where(InboundEventModel.event_id == event_id)
+        result = await self._session.execute(stmt)
+        if result.scalar():
+            return True
+        return False

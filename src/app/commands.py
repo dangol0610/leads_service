@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Any
 from uuid import UUID
 
 
@@ -13,3 +14,11 @@ class CreateLeadCommand:
 @dataclass(frozen=True, slots=True)
 class GetLeadQuery:
     lead_id: UUID
+
+
+@dataclass(frozen=True, slots=True)
+class ProcessModerationCommand:
+    event_id: UUID
+    event_type: str
+    aggregate_id: UUID
+    payload: dict[str, Any]

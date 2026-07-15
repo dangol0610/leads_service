@@ -32,3 +32,12 @@ class OutboxEvent:
 
     def mark_published(self) -> None:
         self.published_at = datetime.now(tz=UTC)
+
+
+@dataclass(slots=True)
+class InboundEvent:
+    event_id: UUID
+    event_type: str
+    aggregate_id: UUID
+    payload: dict[str, Any]
+    received_at: datetime | None = None

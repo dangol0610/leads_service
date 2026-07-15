@@ -1,9 +1,12 @@
 import json
+from datetime import UTC, datetime
 
-from src.app.commands import CreateLeadCommand, GetLeadQuery
+from loguru import logger
+
+from src.app.commands import CreateLeadCommand, GetLeadQuery, ProcessModerationCommand
 from src.app.exceptions import LeadNotFoundError
 from src.app.interfaces import MessageProducer, UnitOfWork
-from src.domain.events import OutboxEvent
+from src.domain.events import InboundEvent, OutboxEvent
 from src.domain.lead import Lead
 
 
@@ -24,8 +27,10 @@ class CreateLeadService:
             await self._uow.leads.add(lead)
             await self._uow.outbox.add(event)
             await self._uow.commit()
-        except Exception:
+            logger.info("Lead created successfully")
+        except Exception as e:
             await self._uow.rollback()
+            logger.exception(f"Failed to create lead: {e}")
             raise
 
         return lead
@@ -37,8 +42,9 @@ class GetLeadService:
 
     async def execute(self, query: GetLeadQuery) -> Lead:
         lead = await self._uow.leads.get_by_id(query.lead_id)
-
+        logger.info("Lead retrieved")
         if lead is None:
+            logger.error(f"Lead not found: {query.lead_id}")
             raise LeadNotFoundError(query.lead_id)
 
         return lead
@@ -52,6 +58,7 @@ class OutboxPublisherService:
     async def execute(self, topic: str) -> int:
         outbox_events = await self._uow.outbox.get_unpublished()
         if not outbox_events:
+            logger.info("No outbox events to publish")
             return 0
         try:
             for event in outbox_events:
@@ -70,9 +77,53 @@ class OutboxPublisherService:
                     value=payload,
                 )
                 await self._uow.outbox.mark_as_published(event.event_id)
+                logger.info(f"Published event: {event.event_id} to topic: {topic}")
             await self._uow.commit()
+        except Exception as e:
+            await self._uow.rollback()
+            logger.exception(f"Failed to publish event: {e}")
+            raise
+        logger.info(f"Published {len(outbox_events)} events to topic: {topic}")
+        return len(outbox_events)
+
+
+class ModerationConsumerService:
+    def __init__(self, uow: UnitOfWork) -> None:
+        self._uow = uow
+
+    async def process(self, command: ProcessModerationCommand) -> bool:
+        exists = await self._uow.inbound.exists(command.event_id)
+        if exists:
+            logger.debug(f"Skipped duplicate event: {command.event_id}")
+            return False
+
+        lead = await self._uow.leads.get_by_id(command.aggregate_id)
+        if not lead:
+            logger.warning(
+                f"Lead not found: {command.aggregate_id} for event: {command.event_id}"
+            )
+            return False
+
+        approved = command.payload.get("approved", False)
+        lead.apply_moderation(approved)
+
+        inbound = InboundEvent(
+            event_id=command.event_id,
+            event_type=command.event_type,
+            aggregate_id=command.aggregate_id,
+            payload=command.payload,
+            received_at=datetime.now(tz=UTC),
+        )
+
+        try:
+            await self._uow.inbound.add(inbound)
+            await self._uow.leads.update_status(lead.id, lead.status)
+            await self._uow.commit()
+            logger.info(
+                f"Processed event: {command.event_id} for lead: {command.aggregate_id}"
+            )
         except Exception:
             await self._uow.rollback()
             raise
 
-        return len(outbox_events)
+        return True
