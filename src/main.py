@@ -34,7 +34,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-app.include_router(leads_router)
+app.include_router(leads_router, prefix="/api/v1")
 
 
 @app.middleware("http")

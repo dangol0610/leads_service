@@ -25,31 +25,31 @@ POST /leads → API → PostgreSQL (leads + outbox)
 ```
 leads_service/
 ├── src/
-│   ├── domain/                  # Бизнес-логика (чистые датаклассы)
+│   ├── domain/                  # Бизнес-логика
 │   │   ├── lead.py              #   Lead, LeadStatus
 │   │   └── events.py            #   OutboxEvent, InboundEvent
 │   │
 │   ├── app/                     # Use cases / сервисы
-│   │   ├── interfaces.py        #   Protocol'ы (порты)
+│   │   ├── interfaces.py        #   Protocol
 │   │   ├── commands.py          #   CQRS команды и запросы
 │   │   ├── exceptions.py        #   Доменные исключения
-│   │   └── services.py          #   Сервисы (внешних зависимостей не знают)
+│   │   └── services.py          #   Сервисы
 │   │
-│   ├── api/                     # Inbound adapter — HTTP (FastAPI)
+│   ├── api/                     # API слой
 │   │   ├── routes/leads.py     #   Эндпоинты
 │   │   ├── schemas/             #   Pydantic схемы
-│   │   ├── dependencies.py      #   DI
-│   │   └── exception_handlers.py
+│   │   ├── dependencies.py      #   Зависимости FastAPI
+│   │   └── exception_handlers.py #   Обработчики исключений
 │   │
-│   ├── infrastructure/          # Outbound adapters
+│   ├── infrastructure/          # Инфраструктурный слой
 │   │   ├── database/            #   SQLAlchemy async (asyncpg)
 │   │   │   ├── config.py        #     Engine, session factory
 │   │   │   ├── models.py        #     ORM модели
 │   │   │   ├── repositories.py  #     Репозитории
 │   │   │   └── uow.py           #     Unit of Work
 │   │   └── kafka/               #   aiokafka
-│   │       ├── producer.py
-│   │       └── consumer.py
+│   │       ├── producer.py      #     Producer wrapping aiokafka
+│   │       └── consumer.py      #     Consumer wrapping aiokafka
 │   │
 │   ├── workers/                 # Фоновые процессы
 │   │   ├── outbox_publisher.py  #   Outbox publisher
@@ -57,8 +57,8 @@ leads_service/
 │   │
 │   ├── core/
 │   │   └── config.py            # Конфигурация (pydantic-settings)
-│   ├── migrations/              # Alembic
-│   └── main.py                  # Composition root — FastAPI app
+│   ├── migrations/              # Alembic миграции
+│   └── main.py                  # Входная точка приложения FastAPI
 │
 ├── Dockerfile
 ├── docker-compose.yml
@@ -233,7 +233,7 @@ LOGURU_LEVEL=DEBUG docker compose up
 - **Retry логика** — повтор при временных ошибках Kafka
 - **Graceful shutdown воркеров** — более надежная обработка сигналов
 - **Prometheus метрики** — количество обработанных событий, ошибок
-- **Тесты** — unit + integration тесты
+- **Тесты** — integration тесты
 - **Миграции в CI** — проверка при деплое
 - **Rate limiting** на POST /leads
 - **Tracing** — OpenTelemetry для end-to-end трассировки

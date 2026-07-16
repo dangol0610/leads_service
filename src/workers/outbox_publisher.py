@@ -55,8 +55,6 @@ class OutboxPublisherWorker:
                     await asyncio.sleep(self._poll_interval)
                 else:
                     logger.info(f"Published {count} events to topic {self._topic}")
-        except asyncio.CancelledError:
-            logger.info("Worker cancelled")
         except Exception:
             logger.exception("Unexpected worker error")
         finally:
