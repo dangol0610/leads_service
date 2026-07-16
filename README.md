@@ -154,6 +154,19 @@ docker compose exec redpanda sh -c 'echo '\''{"event_id":"550e8400-e29b-41d4-a71
 
 После обработки статус заявки изменится на `approved` или `rejected`. Повторная отправка с тем же `event_id` игнорируется (идемпотентность).
 
+### Пример логов после успешной ручной проверки
+
+```bash
+leads-api-1  | 2026-07-16 08:22:36.279 | INFO     | src.app.services:execute:33 - Lead created successfully
+leads-api-1  | INFO:     172.18.0.1:59160 - "POST /api/v1/leads HTTP/1.1" 201 Created
+leads-publisher-1  | 2026-07-16 08:22:36.920 | INFO     | src.app.services:execute:88 - Published event: 6e8178ea-f047-46b5-b9b4-789cf27bab0d to topic: leads.events.v1
+leads-publisher-1  | 2026-07-16 08:22:36.958 | INFO     | src.app.services:execute:94 - Published 1 events to topic: leads.events.v1
+leads-publisher-1  | 2026-07-16 08:22:36.960 | INFO     | __main__:run:57 - Published 1 events to topic leads.events.v1
+leads-consumer-1   | 2026-07-16 08:24:51.699 | INFO     | src.app.services:process:133 - Processed event: 6e8178ea-f047-46b5-b9b4-789cf27bab0d for lead: 1951b25e-46a8-4502-ab7f-971f5c855343
+leads-consumer-1   | 2026-07-16 08:24:51.704 | INFO     | __main__:run:67 - Processed message 6e8178ea-f047-46b5-b9b4-789cf27bab0d
+leads-consumer-1   | 2026-07-16 08:24:51.723 | INFO     | __main__:run:80 - Committed offset after processing 1
+```
+
 ### Пример события для ручной отправки
 
 ```json
