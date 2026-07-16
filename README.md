@@ -231,6 +231,11 @@ python -m src.workers.consumer
 LOGURU_LEVEL=DEBUG docker compose up
 ```
 
+## Тесты
+```bash
+pytest
+```
+
 ## Что сделано
 
 - `POST /leads` — создание заявки, запись в outbox в одной транзакции
